@@ -1,0 +1,59 @@
+[
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=altadefinizione.food&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Corrah/Corrah",
+        "fileSize": 12190,
+        "status": 1,
+        "language": "it",
+        "authors": [
+            "Adippe"
+        ],
+        "tvTypes": [
+            "Movie"
+        ],
+        "version": 3,
+        "internalName": "AltadefinizioneProvider",
+        "url": "https://raw.githubusercontent.com/Corrah/Corrah/builds/AltadefinizioneProvider.cs3",
+        "name": "AltadefinizioneProvider"
+    },
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=www.animeworld.tv&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Corrah/Corrah",
+        "fileSize": 21050,
+        "status": 1,
+        "language": "it",
+        "authors": [
+            
+        ],
+        "tvTypes": [
+            "AnimeMovie",
+            "Anime",
+            "OVA"
+        ],
+        "version": 3,
+        "internalName": "AnimeWorldProvider",
+        "url": "https://raw.githubusercontent.com/Corrah/Corrah/builds/AnimeWorldProvider.cs3",
+        "name": "AnimeWorldProvider"
+    },
+    {
+        "iconUrl": "https://www.google.com/s2/favicons?domain=guardaserie.ceo&sz=%size%",
+        "apiVersion": 1,
+        "repositoryUrl": "https://github.com/Corrah/Corrah",
+        "fileSize": 11989,
+        "status": 1,
+        "language": "it",
+        "authors": [
+            "Adippe"
+        ],
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "version": 3,
+        "internalName": "GuardaSerieProvider",
+        "url": "https://raw.githubusercontent.com/Corrah/Corrah/builds/GuardaSerieProvider.cs3",
+        "name": "GuardaSerieProvider"
+    }
+]
