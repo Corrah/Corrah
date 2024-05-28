@@ -1,0 +1,8 @@
+{
+    "name": "Corra Repository",
+    "description": "CloudStream Corra Repository",
+    "manifestVersion": 1,
+    "pluginLists": [
+      "https://raw.githubusercontent.com/Corrah/Corrah/builds/plugins.json"
+    ]
+}
