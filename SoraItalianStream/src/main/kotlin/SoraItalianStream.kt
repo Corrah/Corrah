@@ -5,11 +5,7 @@ import com.lagradost.SoraItalianExtractor.invoGuardare
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.metaproviders.TmdbProvider
-import com.lagradost.SoraItalianExtractor.invoAniPlay
-import com.lagradost.SoraItalianExtractor.invoAnimeSaturn
 import com.lagradost.SoraItalianExtractor.invoAnimeWorld
-import com.lagradost.SoraItalianExtractor.invoCb01
-import com.lagradost.SoraItalianExtractor.invoFilmpertutti
 import com.lagradost.SoraItalianExtractor.invoGuardaserie
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
@@ -35,11 +31,7 @@ open class SoraItalianStream : TmdbProvider() {
         private const val tmdbAPI = "https://api.themoviedb.org/3"
         private const val apiKey = "71f37e6dff3b879fa4656f19547c418c" // PLEASE DON'T STEAL
         const val guardaserieUrl = "https://guardaserie.meme"
-        const val filmpertuttiUrl = "https://www.filmpertutti.rent"
-        const val cb01Url = "https://cb01.church"
         const val animeworldUrl = "https://www.animeworld.so"
-        const val aniplayUrl = "https://www.animeunity.to/"
-        const val animesaturnUrl = "https://www.animesaturn.bz"
         const val tmdb2mal = "https://tmdb2mal.slidemovies.org"
         fun getType(t: String?): TvType {
             return when (t) {
@@ -200,307 +192,139 @@ open class SoraItalianStream : TmdbProvider() {
             var seasonNum = 0
             val seasonDataList = res.seasons?.filter { it.seasonNumber != 0 }?.apmap { season ->
                 app.get("$tmdbAPI/${data.type}/${data.id}/season/${season.seasonNumber}?api_key=$apiKey&language=it-IT")
-                    .parsedSafe<MediaDetailEpisodes>()?.episodes
+                    .parsedSafe<SeasonData>()
+            }
+            val episodesList = seasonDataList?.apmap { seasonData ->
+                seasonData?.episodes?.map { it.toEpisode(seasonData.seasonNumber) }
+                    ?.also { episodes.addAll(it) }
             }
 
-            res.seasons?.filter { it.seasonNumber != 0 }?.forEachIndexed { index, season ->
-                val seasonData = seasonDataList?.get(index)
-                if (seasonData?.first()?.episodeNumber == 1)
-                    seasonNum += 1
-
-                seasonData?.forEach { eps ->
-                    episodes.add(Episode(
-                        LinkData(
-                            data.id,
-                            res.externalIds?.imdbId,
-                            data.type,
-                            seasonNum,
-                            eps.episodeNumber,
-                            title = title,
-                            year = year ?: season.airDate?.split("-")?.first()?.toIntOrNull(),
-                            orgTitle = orgTitle,
-                            isAnime = isAnime
-                        ).toJson(),
-                        name = eps.name,
-                        season = seasonNum,
-                        episode = eps.episodeNumber,
-                        posterUrl = getImageUrl(eps.stillPath),
-                        rating = eps.voteAverage?.times(10)?.roundToInt(),
-                        description = eps.overview
-                    ).apply {
-                        this.addDate(eps.airDate)
-                    })
-                }
-            }
             newTvSeriesLoadResponse(
                 title,
                 url,
-                TvType.TvSeries,
-                episodes
+                type,
+                episodes,
+                LinkData(
+                    data.id,
+                    res.externalIds?.imdbId,
+                    data.type,
+                    title = title,
+                    year = year,
+                    orgTitle = orgTitle,
+                    isAnime = isAnime
+                ).toJson(),
             ) {
                 this.posterUrl = getOriImageUrl(res.backdropPath)
                 this.year = year
                 this.plot = res.overview
                 this.tags = res.genres?.mapNotNull { it.name }
-                this.showStatus = getStatus(res.status)
                 this.recommendations = recommendations
                 this.actors = actors
+                this.status = getStatus(res.status)
                 addTrailer(trailer)
             }
         }
     }
 
-    override suspend fun loadLinks(
-        data: String,
-        isCasting: Boolean,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ): Boolean {
-
-        val res = parseJson<LinkData>(data)
-        val malID = app.get("$tmdb2mal/?id=${res.id}&s=${res.season}").text.trim()
-        argamap(
-            {
-                if (res.isAnime) invoAnimeWorld(
-                    malID,
-                    res.title,
-                    res.episode,
-                    callback
-                )
-            },
-            {
-                if (res.isAnime) invoAniPlay(
-                    malID,
-                    res.title,
-                    res.episode,
-                    res.year,
-                    callback
-                )
-            },
-            {
-                if (res.isAnime) invoAnimeSaturn(
-                    malID,
-                    res.title,
-                    res.episode,
-                    callback
-                )
-            },
-            {
-                if (res.type == "movie") invoGuardare(
-                    res.imdbId,
-                    subtitleCallback,
-                    callback
-                ) //just movies/anime movie
-            },
-            {
-                if (res.type == "tv") invoGuardaserie( //has tv series and anime
-                    res.imdbId,
-                    res.season,
-                    res.episode,
-                    subtitleCallback,
-                    callback
-                )
-            },
-            {
-                invoFilmpertutti( //has tv series, film and some anime
-                    res.imdbId,
-                    res.title,
-                    res.type,
-                    res.season,
-                    res.episode,
-                    res.year,
-                    subtitleCallback,
-                    callback
-                )
-            },
-            {
-                if (res.type == "movie") invoCb01(res.title, res.year, subtitleCallback, callback)
-            }
-        )
-
-        return true
-    }
-
-    private data class LinkData(
-        val id: Int? = null,
-        val imdbId: String? = null,
-        val type: String? = null, //movie or tv
-        val season: Int? = null,
-        val episode: Int? = null,
-        val aniId: String? = null,
-        val animeId: String? = null,
-        val title: String? = null,
-        val year: Int? = null,
-        val orgTitle: String? = null,
-        val isAnime: Boolean
+    data class LinkData(
+        @JsonProperty("id") var id: Long? = null,
+        @JsonProperty("imdb") var imdb: String? = null,
+        @JsonProperty("type") var type: String? = null,
+        @JsonProperty("title") var title: String? = null,
+        @JsonProperty("year") var year: Int? = null,
+        @JsonProperty("orgtitle") var orgTitle: String? = null,
+        @JsonProperty("isAnime") var isAnime: Boolean? = null,
     )
 
     data class Data(
-        val id: Int? = null,
-        val type: String? = null,
-        val aniId: String? = null,
-        val malId: Int? = null,
-    )
-
-    data class Subtitles(
-        @JsonProperty("url") val url: String? = null,
-        @JsonProperty("lang") val lang: String? = null,
-        @JsonProperty("language") val language: String? = null,
-    )
-
-    data class Sources(
-        @JsonProperty("url") val url: String? = null,
-        @JsonProperty("quality") val quality: String? = null,
-        @JsonProperty("isM3U8") val isM3U8: Boolean = true,
-    )
-
-    data class LoadLinks(
-        @JsonProperty("sources") val sources: ArrayList<Sources>? = arrayListOf(),
-        @JsonProperty("subtitles") val subtitles: ArrayList<Subtitles>? = arrayListOf(),
+        @JsonProperty("id") val id: Long,
+        @JsonProperty("type") val type: String,
     )
 
     data class Results(
-        @JsonProperty("results") val results: ArrayList<Media>? = arrayListOf(),
+        @JsonProperty("results") val results: List<Media>?,
     )
 
     data class Media(
-        @JsonProperty("id") val id: Int? = null,
-        @JsonProperty("name") val name: String? = null,
-        @JsonProperty("title") val title: String? = null,
-        @JsonProperty("original_title") val originalTitle: String? = null,
-        @JsonProperty("media_type") val mediaType: String? = null,
-        @JsonProperty("poster_path") val posterPath: String? = null,
+        @JsonProperty("media_type") val mediaType: String?,
+        @JsonProperty("poster_path") val posterPath: String?,
+        @JsonProperty("id") val id: Long?,
+        @JsonProperty("title") val title: String?,
+        @JsonProperty("name") val name: String?,
+        @JsonProperty("original_title") val originalTitle: String?,
     )
-
-    data class Seasons(
-        @JsonProperty("id") val id: Int? = null,
-        @JsonProperty("name") val name: String? = null,
-        @JsonProperty("season_number") val seasonNumber: Int? = null,
-        @JsonProperty("air_date") val airDate: String? = null,
-    )
-
-    data class Cast(
-        @JsonProperty("id") val id: Int? = null,
-        @JsonProperty("name") val name: String? = null,
-        @JsonProperty("original_name") val originalName: String? = null,
-        @JsonProperty("character") val character: String? = null,
-        @JsonProperty("known_for_department") val knownForDepartment: String? = null,
-        @JsonProperty("profile_path") val profilePath: String? = null,
-    )
-
-    data class Episodes(
-        @JsonProperty("id") val id: Int? = null,
-        @JsonProperty("name") val name: String? = null,
-        @JsonProperty("overview") val overview: String? = null,
-        @JsonProperty("air_date") val airDate: String? = null,
-        @JsonProperty("still_path") val stillPath: String? = null,
-        @JsonProperty("vote_average") val voteAverage: Double? = null,
-        @JsonProperty("episode_number") val episodeNumber: Int? = null,
-        @JsonProperty("season_number") val seasonNumber: Int? = null,
-    )
-
-    data class MediaDetailEpisodes(
-        @JsonProperty("episodes") val episodes: ArrayList<Episodes>? = arrayListOf(),
-    )
-
 
     data class MovieDetails(
-        val adult: Boolean? = null,
-        @JsonProperty("first_air_date") val tvDate: String? = null,
-        @JsonProperty("release_date") val movieDate: String? = null,
-        @JsonProperty("backdrop_path") val backdropPath: String? = null,
-        val genres: List<Genre>? = null,
-        val id: Long? = null,
-        val name: String? = null,
-        val title: String? = null,
-        @JsonProperty("number_of_seasons") val numberOfSeasons: Long? = null,
-        @JsonProperty("original_name") val originalName: String? = null,
-        @JsonProperty("original_title") val originalTitle: String? = null,
-        val overview: String? = null,
-        val popularity: Double? = null,
-        @JsonProperty("poster_path") val posterPath: String? = null,
-        val seasons: List<Season>? = null,
-        val status: String? = null,
-        val tagline: String? = null,
-        val type: String? = null,
-        @JsonProperty("vote_average") val voteAverage: Double? = null,
-        @JsonProperty("vote_count") val voteCount: Long? = null,
-        @JsonProperty("credits") val credits: Credits? = null,
-        @JsonProperty("recommendations") val recommandations: Recommendations? = null,
-        @JsonProperty("videos") val videos: Videos? = null,
-        @JsonProperty("external_ids") val externalIds: ExternalIds? = null
-    )
-
-    data class Recommendations(
-        @JsonProperty("results") val results: List<Media>? = null,
-    )
-
-    data class Credits(
-        val cast: List<Cast>? = null,
+        @JsonProperty("id") val id: Long?,
+        @JsonProperty("media_type") val mediaType: String?,
+        @JsonProperty("backdrop_path") val backdropPath: String?,
+        @JsonProperty("poster_path") val posterPath: String?,
+        @JsonProperty("original_title") val originalTitle: String?,
+        @JsonProperty("original_name") val originalName: String?,
+        @JsonProperty("title") val title: String?,
+        @JsonProperty("name") val name: String?,
+        @JsonProperty("release_date") val movieDate: String?,
+        @JsonProperty("first_air_date") val tvDate: String?,
+        @JsonProperty("external_ids") val externalIds: ExternalIds?,
+        @JsonProperty("overview") val overview: String?,
+        @JsonProperty("credits") val credits: Credits?,
+        @JsonProperty("status") val status: String?,
+        @JsonProperty("genres") val genres: List<Genres>?,
+        @JsonProperty("recommendations") val recommandations: Results?,
+        @JsonProperty("videos") val videos: Videos?,
     )
 
     data class ExternalIds(
-        @JsonProperty("imdb_id") val imdbId: String? = null
+        @JsonProperty("imdb_id") val imdbId: String?,
+    )
+
+    data class Credits(
+        @JsonProperty("cast") val cast: List<Cast>?,
+    )
+
+    data class Cast(
+        @JsonProperty("name") val name: String?,
+        @JsonProperty("original_name") val originalName: String?,
+        @JsonProperty("profile_path") val profilePath: String?,
+        @JsonProperty("known_for_department") val knownForDepartment: String?,
+    )
+
+    data class Genres(
+        @JsonProperty("name") val name: String?,
+        @JsonProperty("id") val id: Long?,
     )
 
     data class Videos(
-        val results: List<Trailers>? = null,
+        @JsonProperty("results") val results: List<VideoData>?,
     )
 
-    data class Trailers(
-        @JsonProperty("key") val key: String? = null,
+    data class VideoData(
+        @JsonProperty("key") val key: String?,
     )
 
-    data class Genre(
-        val id: Long? = null,
-        val name: String? = null
+    data class SeasonData(
+        @JsonProperty("season_number") val seasonNumber: Int,
+        @JsonProperty("episodes") val episodes: List<EpisodeData>?,
     )
 
-    data class Season(
-        @JsonProperty("air_date") val airDate: String? = null,
-        @JsonProperty("episode_count") val episodeCount: Int? = null,
-        val id: Long? = null,
-        val name: String? = null,
-        val overview: String? = null,
-        @JsonProperty("poster_path") val posterPath: String? = null,
-        @JsonProperty("season_number") val seasonNumber: Int? = null
+    data class EpisodeData(
+        @JsonProperty("season_number") val season: Int?,
+        @JsonProperty("episode_number") val episode: Int?,
+        @JsonProperty("name") val name: String?,
+        @JsonProperty("still_path") val stillPath: String?,
+        @JsonProperty("overview") val overview: String?,
+        @JsonProperty("vote_average") val voteAverage: Float?,
     )
 
-    data class AnimeWorldJson(
-        @JsonProperty("grabber") val grabber: String,
-        @JsonProperty("name") val name: String,
-        @JsonProperty("target") val target: String,
-    )
-
-    data class AniPlayApiSearchResult(
-        @JsonProperty("id") val id: Int,
-        @JsonProperty("listWebsites") val websites: List<AniPlayWebsites>
-    )
-
-    data class AniPlayWebsites(
-        @JsonProperty("url") val url: String? = null,
-        @JsonProperty("listWebsiteId") val websitesId: Int? = null
-    )
-
-    data class AniplayApiAnime(
-        @JsonProperty("episodes") val episodes: List<AniplayApiEpisode>,
-        @JsonProperty("seasons") val seasons: List<AniplayApiSeason>?,
-        @JsonProperty("title") val title: String?
-    )
-
-    data class AniplayApiEpisode(
-        @JsonProperty("id") val id: Int,
-        @JsonProperty("title") val title: String?,
-        @JsonProperty("episodeNumber") val number: String,
-    )
-
-    data class AniplayApiSeason(
-        @JsonProperty("id") val id: Int,
-        @JsonProperty("name") val name: String,
-        @JsonProperty("episodeStart") val episodeStart: Int
-    )
-
-    data class AniPlayApiEpisodeUrl(
-        @JsonProperty("videoUrl") val url: String
-    )
+    private fun EpisodeData.toEpisode(season: Int?): Episode {
+        return Episode(
+            name ?: "Episodio $episode",
+            season?.toString() ?: "-1",
+            episode?.toString() ?: "-1",
+        ) {
+            this.posterUrl = getImageUrl(stillPath)
+            this.description = overview
+            this.rating = voteAverage?.roundToInt()
+        }
+    }
 }
