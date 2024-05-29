@@ -15,6 +15,7 @@ buildscript {
         classpath("com.github.recloudstream:gradle:-SNAPSHOT")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
     }
 }
 
