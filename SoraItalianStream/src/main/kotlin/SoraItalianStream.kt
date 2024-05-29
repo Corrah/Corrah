@@ -34,12 +34,12 @@ open class SoraItalianStream : TmdbProvider() {
     companion object {
         private const val tmdbAPI = "https://api.themoviedb.org/3"
         private const val apiKey = "71f37e6dff3b879fa4656f19547c418c" // PLEASE DON'T STEAL
-        const val guardaserieUrl = "https://guardaserie.ceo"
+        const val guardaserieUrl = "https://guardaserie.meme"
         const val filmpertuttiUrl = "https://www.filmpertutti.rent"
         const val cb01Url = "https://cb01.church"
-        const val animeworldUrl = "https://www.animeworld.tv"
+        const val animeworldUrl = "https://www.animeworld.so"
         const val aniplayUrl = "https://www.animeunity.to/"
-        const val animesaturnUrl = "https://www.animesaturn.co"
+        const val animesaturnUrl = "https://www.animesaturn.bz"
         const val tmdb2mal = "https://tmdb2mal.slidemovies.org"
         fun getType(t: String?): TvType {
             return when (t) {
