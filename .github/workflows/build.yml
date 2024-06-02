@@ -36,8 +36,12 @@ jobs:
           java-version: 11
           distribution: 'temurin' # You can change 'temurin' to 'zulu' or another distribution if you prefer
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install and accept Android SDK licenses
+        run: |
+          curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+          mkdir -p $HOME/cmdline-tools
+          unzip -q -d $HOME/cmdline-tools cmdline-tools.zip
+          $HOME/cmdline-tools/tools/bin/sdkmanager --licenses
 
       - name: Build Plugins
         run: |
