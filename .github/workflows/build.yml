@@ -34,7 +34,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 11
-          distribution: 'temurin' # Puoi cambiare 'temurin' con 'zulu' o un'altra distribuzione se preferisci
+          distribution: 'temurin' # You can change 'temurin' to 'zulu' or another distribution if you prefer
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
