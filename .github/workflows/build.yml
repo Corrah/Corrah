@@ -43,12 +43,12 @@ jobs:
 
       - name: Build Plugins
         run: |
-          mkdir -p $GITHUB_WORKSPACE/src
+          cp $GITHUB_WORKSPACE/gradlew $GITHUB_WORKSPACE/src/
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make makePluginsJson
-          cp **/build/*.cs3 $GITHUB_WORKSPACE/builds
-          cp build/plugins.json $GITHUB_WORKSPACE/builds
+          find . -name "*.cs3" -exec cp {} $GITHUB_WORKSPACE/builds \;
+          cp build/plugins.json $GITHUB_WORKSPACE/buildss
 
       - name: Push builds
         run: |
