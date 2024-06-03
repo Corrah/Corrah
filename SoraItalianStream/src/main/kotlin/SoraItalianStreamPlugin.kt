@@ -1,0 +1,23 @@
+package com.lagradost
+
+import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
+import com.lagradost.cloudstream3.plugins.Plugin
+import android.content.Context
+
+@CloudstreamPlugin
+class SoraStreamItalianPlugin: Plugin() {
+    override fun load(context: Context) {
+        // All providers should be added in this manner. Please don't edit the providers list directly.
+        registerMainAPI(SoraItalianStream())
+        registerMainAPI(AnimeUnityStream())
+        registerMainAPI(StreamingCommunityStream())
+    }
+}
+
+class AnimeUnityStream : SoraItalianStream() {
+    // Implement provider-specific logic here if necessary
+}
+
+class StreamingCommunityStream : SoraItalianStream() {
+    // Implement provider-specific logic here if necessary
+}
