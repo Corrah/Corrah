@@ -11,14 +11,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v3 # Usa Node.js 20
-        with:
-          path: "src"
+        uses: actions/checkout@v3 # Aggiornato per usare Node.js 20
 
       - name: Checkout builds
-        uses: actions/checkout@v3 # Usa Node.js 20
+        uses: actions/checkout@v3 # Aggiornato per usare Node.js 20
         with:
           ref: "builds"
           path: "builds"
@@ -26,14 +25,19 @@ jobs:
       - name: Clean old builds
         run: rm $GITHUB_WORKSPACE/builds/*.cs3 || true
 
-      - name: Setup JDK 17
-        uses: actions/setup-java@v3 # Usa Node.js 20
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v3
         with:
-          distribution: 'temurin' # Usa 'temurin' per la distribuzione del JDK
+          node-version: '20'
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v3 # Aggiornato per usare Node.js 20
+        with:
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v3 # Aggiornato per usare Node.js 20
         with:
           accept-android-sdk-licenses: true
 
