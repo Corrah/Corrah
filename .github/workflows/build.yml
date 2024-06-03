@@ -43,6 +43,7 @@ jobs:
 
       - name: Build Plugins
         run: |
+          mkdir -p $GITHUB_WORKSPACE/src
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make makePluginsJson
